@@ -217,6 +217,7 @@ setup_args = dict(
         load=fiona.fio.cat:load
         ls=fiona.fio.ls:ls
         filter=fiona.fio.filter:filter
+        stats=fiona.fio.stats:stats
         ''',
     install_requires=requirements,
     tests_require=['nose'],
