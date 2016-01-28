@@ -1,6 +1,8 @@
+from __future__ import print_function
 from collections import defaultdict
 
 import click
+from tabulate import tabulate
 from cligj import features_in_arg
 
 
@@ -16,17 +18,23 @@ def stats(ctx, features):
             attr_names.add(key)
             values[key].append(value)
 
-    print "attr n min max sum"
+    headers = "attr min mean max n".split()
+    rows = []
     for attr, values in values.items():
+        n = len(values)
         try:
             total = sum(values)
+            mean = total / float(n)
         except TypeError:
-            total = "--"
+            total = ""
+            mean = ""
 
         row = (
             attr,
-            len(values),
             min(values),
+            mean,
             max(values),
-            total)
-        print "{} \t {} \t {} \t {} \t {}".format(*row)
+            n)
+        rows.append(row)
+
+    print(tabulate(rows, headers=headers))
