@@ -1,5 +1,6 @@
-from __future__ import print_function
+from __future__ import division
 from collections import defaultdict
+import json
 
 import click
 from tabulate import tabulate
@@ -7,47 +8,50 @@ from cligj import features_in_arg
 
 
 @click.command(short_help="summary statistics")
+@click.option("--table", '-t', is_flag=True, default=False,
+              help="Output a formated table")
 @features_in_arg
-@click.option("--unique", default=None)
 @click.pass_context
-def stats(ctx, features, unique):
+def stats(ctx, features, table):
     attr_names = set()
-    values = defaultdict(list)
+    data = defaultdict(list)
+    types = {}
     for feature in features:
         prop = feature['properties']
         for key, value in prop.items():
             attr_names.add(key)
             try:
-                value = int(value)
-            except ValueError:
-                try:
-                    value = float(value)
-                except ValueError:
-                    pass
+                value = float(value)
+            except (TypeError, ValueError):
+                pass
 
-            values[key].append(value)
+            data[key].append(value)
 
-    if unique:
-        for val in set(values[unique]):
-            click.echo(val)
-    else:
-        headers = "attr min mean max n".split()
-        rows = []
-        for attr, values in values.items():
-            n = len(values)
+    headers = "attr min mean max n n_unique".split()
+    rows = []
+    for attr in sorted(data.keys()):
+        values = [v for v in data[attr] if v is not None]
+        n = len(values)
+        nu = len(set(values))
+
+        total = None
+        mean = None
+        minv = None
+        maxv = None
+        if n > 0:
             try:
                 total = sum(values)
                 mean = total / float(n)
+                minv = min(values)
+                maxv = max(values)
             except TypeError:
-                total = ""
-                mean = ""
+                pass
 
-            row = (
-                attr,
-                min(values),
-                mean,
-                max(values),
-                n)
-            rows.append(row)
+        row = (attr, minv, mean, maxv, n, nu)
+        rows.append(row)
 
-        print(tabulate(rows, headers=headers))
+    if table:
+        click.echo(tabulate(rows, headers=headers))
+    else:
+        d = [dict(zip(headers, r)) for r in rows]
+        click.echo(json.dumps(d, indent=2))
