@@ -13,9 +13,9 @@ from cligj import features_in_arg
 @features_in_arg
 @click.pass_context
 def stats(ctx, features, table):
+    """Calculate summary statistics for GeoJSON features."""
     attr_names = set()
     data = defaultdict(list)
-    types = {}
     for feature in features:
         prop = feature['properties']
         for key, value in prop.items():
